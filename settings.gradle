@@ -1,0 +1,3 @@
+include ':retrofit-rx-retry'
+include ':app'
+rootProject.name = "Retrofit RxRetry"
