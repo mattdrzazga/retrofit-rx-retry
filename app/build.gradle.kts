@@ -4,13 +4,13 @@ plugins {
 }
 
 android {
-    compileSdkVersion(30)
-    buildToolsVersion("30.0.3")
+    compileSdkVersion(Android.compileSdk)
+    buildToolsVersion(Android.buildTools)
 
     defaultConfig {
         applicationId("com.mattdrzazga.retrofitrxretry")
-        minSdkVersion(21)
-        targetSdkVersion(30)
+        minSdkVersion(Android.minSdk)
+        targetSdkVersion(Android.targetSdk)
         versionCode(1)
         versionName("1.0")
 
@@ -36,13 +36,14 @@ android {
 }
 
 dependencies {
+    implementation(Dependencies.retrofit)
+    implementation(Dependencies.rxJava3)
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:${Versions.kotlin}")
-    implementation("androidx.core:core-ktx:1.3.2")
-    implementation("androidx.appcompat:appcompat:1.2.0")
-    implementation("com.google.android.material:material:1.3.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.0.4")
-    testImplementation("junit:junit:4.13")
-    androidTestImplementation("androidx.test.ext:junit:1.1.2")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")
+    implementation(Dependencies.appCompat)
+    implementation(Dependencies.material)
+    implementation(Dependencies.constraintLayout)
+
+    testImplementation(Dependencies.junit)
+    androidTestImplementation(Dependencies.junitExt)
+    androidTestImplementation(Dependencies.espressoCore)
 }
