@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * Class used to indicate that something went wrong on the server side.
  * This means that network request ended with 5xx code.
  */
-internal open class ServerException : Exception {
+open class ServerException : Exception {
     constructor() : super()
     constructor(cause: Throwable) : super(cause)
 }
@@ -19,7 +19,7 @@ internal open class ServerException : Exception {
 /**
  * Indicates that request ended with non-critical failure and can be retried.
  */
-internal class RecoverableServerException : ServerException {
+class RecoverableServerException : ServerException {
     constructor() : super()
     constructor(exception: HttpException) : super(exception)
 }
@@ -40,7 +40,7 @@ private fun wrapServerException(exception: HttpException): Exception {
 /**
  * Wraps [Throwable] in [ServerException] if throwable is [HttpException] and its error code is 500, 501, 502.
  */
-internal fun <T> Single<T>.wrapServerError(): Single<T> {
+fun <T> Single<T>.wrapServerError(): Single<T> {
     return onErrorResumeNext {
         if (it is HttpException) {
             return@onErrorResumeNext Single.error<T>(wrapServerException(it))
@@ -53,7 +53,7 @@ internal fun <T> Single<T>.wrapServerError(): Single<T> {
  * Resubscribes to the current Single if request ended with [RecoverableServerException] error.
  * This method will attempt recovery twice. First time after 1 second, and the second time after 2 seconds.
  */
-internal fun <T> Single<T>.attemptRecoveryFromServerError(): Single<T> {
+fun <T> Single<T>.attemptRecoveryFromServerError(): Single<T> {
     return retryWhen { flowable ->
         // Don't combine with any Flowable here because
         // if the Publisher signals an onComplete, the resulting Single will signal a NoSuchElementException.
@@ -76,13 +76,14 @@ internal fun <T> Single<T>.attemptRecoveryFromServerError(): Single<T> {
 /**
  * Utility method that joins [wrapServerError] with [attemptRecoveryFromServerError] calls.
  */
-fun <T> Single<T>.retryRequestIfPossible(): Single<T> = wrapServerError().attemptRecoveryFromServerError()
+fun <T> Single<T>.retryRequestIfPossible(): Single<T> =
+    wrapServerError().attemptRecoveryFromServerError()
 
 /**
  * Simulate ServerError. This exists only for debug purposes.
  * @param recoverable if true, this method will throw [RecoverableServerException], if false it will throw [ServerException]
  */
-internal fun <T : Any> Single<T>.simulateServerError(recoverable: Boolean = true): Single<T> {
+fun <T : Any> Single<T>.simulateServerError(recoverable: Boolean = true): Single<T> {
     return map {
         if (recoverable) {
             throw RecoverableServerException()
