@@ -3,7 +3,6 @@ package com.mattdrzazga.retrofitrxretry
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Single
 import retrofit2.HttpException
-import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -25,25 +24,12 @@ class RecoverableServerException : ServerException {
 }
 
 /**
- * Wraps [HttpException] into [ServerException] if error code is 5xx.
- * @return [ServerException] or [HttpException] if error code was not 5xx.
+ * Wraps [HttpException] in [ServerException].
  */
-private fun wrapServerException(exception: HttpException): Exception {
-    return when (exception.code()) {
-        HttpURLConnection.HTTP_INTERNAL_ERROR -> ServerException(exception)
-        HttpURLConnection.HTTP_NOT_IMPLEMENTED -> RecoverableServerException(exception)
-        HttpURLConnection.HTTP_BAD_GATEWAY -> RecoverableServerException(exception)
-        else -> exception
-    }
-}
-
-/**
- * Wraps [Throwable] in [ServerException] if throwable is [HttpException] and its error code is 500, 501, 502.
- */
-fun <T> Single<T>.wrapServerError(): Single<T> {
+fun <T> Single<T>.wrapServerErrors(wrapper: (HttpException) -> Exception): Single<T> {
     return onErrorResumeNext {
         if (it is HttpException) {
-            return@onErrorResumeNext Single.error<T>(wrapServerException(it))
+            return@onErrorResumeNext Single.error<T>(wrapper(it))
         }
         return@onErrorResumeNext Single.error(it)
     }
@@ -68,16 +54,10 @@ fun <T> Single<T>.attemptRecoveryFromServerError(): Single<T> {
                 }
             }
             // Don't retry
-            return@flatMap Flowable.error<Any>(it)
+            return@flatMap Flowable.error<T>(it)
         }
     }
 }
-
-/**
- * Utility method that joins [wrapServerError] with [attemptRecoveryFromServerError] calls.
- */
-fun <T> Single<T>.retryRequestIfPossible(): Single<T> =
-    wrapServerError().attemptRecoveryFromServerError()
 
 /**
  * Simulate ServerError. This exists only for debug purposes.

@@ -36,6 +36,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":retrofit-rx-retry"))
     implementation(Dependencies.retrofit)
     implementation(Dependencies.rxJava3)
 
